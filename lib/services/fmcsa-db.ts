@@ -13,9 +13,14 @@ import { mockScenarios } from '../data/mock-fmcsa-data';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'fmcsa.db');
 
-let dbInstance: Database.Database | null = null;
+let dbInstance: Database | null = null;
 
-function getDB(): Database.Database | null {
+function getDB(): Database | null {
+  // On Vercel/serverless environments, skip local database
+  if (process.env.VERCEL || process.env.USE_API_ONLY === 'true') {
+    return null;
+  }
+
   if (dbInstance) {
     return dbInstance;
   }
@@ -30,7 +35,7 @@ function getDB(): Database.Database | null {
     dbInstance = new Database(DB_PATH, { readonly: true });
     return dbInstance;
   } catch (error) {
-    console.error('[FMCSA] Error opening database:', error);
+    console.warn('Could not access local database (serverless environment?), using API-only mode:', error);
     return null;
   }
 }
